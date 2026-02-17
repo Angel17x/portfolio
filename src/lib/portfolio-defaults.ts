@@ -13,7 +13,6 @@ export const defaultHero: HeroData = {
   name: "Angel Lugo",
   tagline:
     "Creo soluciones web y móviles con JavaScript, React, Node.js y más. Interfaces intuitivas y arquitecturas escalables.",
-  cvUrl: "/Angel-Lugo-CV.pdf",
   githubUrl: "https://github.com/Angel17x",
   linkedinUrl: "https://www.linkedin.com/in/angel-lugo-fullstack-developer",
 }
@@ -163,7 +162,6 @@ export const defaultContact: ContactData = {
     "Estoy disponible para nuevas oportunidades. No dudes en contactarme.",
   email: "angel26078613@gmail.com",
   phone: "+58 414 237 4668",
-  cvUrl: "/Angel-Lugo-CV.pdf",
   githubUrl: "https://github.com/Angel17x",
   linkedinUrl: "https://www.linkedin.com/in/angel-lugo-fullstack-developer",
   location: "Venezuela",

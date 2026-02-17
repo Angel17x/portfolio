@@ -1,16 +1,57 @@
 /**
  * Script para poblar Firestore con los datos del portafolio.
- * Ejecutar con: node scripts/seed-firestore.mjs
+ * Ejecutar con: npm run seed:firebase
  *
  * Requiere: Firebase Admin SDK y las credenciales en FIREBASE_SERVICE_ACCOUNT
  * o GOOGLE_APPLICATION_CREDENTIALS apuntando al JSON de la cuenta de servicio.
+ *
+ * Índices: Las consultas compuestas (p. ej. historial del chat IA) necesitan índices.
+ * Una vez configurado Firebase CLI (firebase login + firebase use <project-id>), ejecuta:
+ *   npm run firestore:indexes
+ * O crea el índice desde el enlace que muestra Firestore en el error.
+ * El archivo firestore.indexes.json ya está en el proyecto.
  */
 import { initializeApp, cert, getApps } from "firebase-admin/app"
 import { getFirestore } from "firebase-admin/firestore"
+import { readFileSync } from "fs"
+import { fileURLToPath } from "url"
+import { dirname, join } from "path"
 
-const firebaseConfig = process.env.FIREBASE_SERVICE_ACCOUNT
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-  : undefined
+// Cargar variables de entorno desde .env.local manualmente
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const envPath = join(__dirname, "..", ".env.local")
+
+try {
+  const envFile = readFileSync(envPath, "utf-8")
+  envFile.split("\n").forEach((line) => {
+    const match = line.match(/^([^=:#]+)=(.*)$/)
+    if (match) {
+      const key = match[1].trim()
+      let value = match[2].trim()
+      // Remover comillas si existen
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1)
+      }
+      if (!process.env[key]) {
+        process.env[key] = value
+      }
+    }
+  })
+} catch (error) {
+  console.warn("No se pudo cargar .env.local, usando variables de entorno del sistema")
+}
+
+let firebaseConfig
+
+// Intentar cargar desde FIREBASE_SERVICE_ACCOUNT (string JSON)
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    firebaseConfig = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+  } catch (e) {
+    console.error("Error parseando FIREBASE_SERVICE_ACCOUNT:", e.message)
+  }
+}
 
 if (!firebaseConfig?.project_id) {
   console.error(
@@ -201,33 +242,63 @@ const education = [
 ]
 
 async function seed() {
-  const batch = db.batch()
+  console.log("Iniciando seed de Firestore...")
+  
+  try {
+    // Usar múltiples batches si hay muchos documentos (límite de 500 por batch)
+    const allDocs = []
+    
+    // Documentos en collection "portfolio"
+    allDocs.push({ collection: "portfolio", doc: "hero", data: portfolio.hero })
+    allDocs.push({ collection: "portfolio", doc: "about", data: portfolio.about })
+    allDocs.push({ collection: "portfolio", doc: "contact", data: portfolio.contact })
 
-  // Documentos en collection "portfolio"
-  batch.set(db.collection("portfolio").doc("hero"), portfolio.hero)
-  batch.set(db.collection("portfolio").doc("about"), portfolio.about)
-  batch.set(db.collection("portfolio").doc("contact"), portfolio.contact)
+    // Colecciones - Experiences
+    experiences.forEach((exp, i) => {
+      allDocs.push({ collection: "experiences", doc: `exp-${i}`, data: exp })
+    })
+    
+    // Colecciones - Projects
+    projects.forEach((proj, i) => {
+      allDocs.push({ collection: "projects", doc: `proj-${i}`, data: proj })
+    })
+    
+    // Colecciones - Skill Groups
+    skillGroups.forEach((sg, i) => {
+      allDocs.push({ collection: "skillGroups", doc: `sg-${i}`, data: sg })
+    })
+    
+    // Colecciones - Education
+    education.forEach((edu, i) => {
+      allDocs.push({ collection: "education", doc: `edu-${i}`, data: edu })
+    })
 
-  // Colecciones
-  experiences.forEach((exp, i) => {
-    const ref = db.collection("experiences").doc(`exp-${i}`)
-    batch.set(ref, exp)
-  })
-  projects.forEach((proj, i) => {
-    const ref = db.collection("projects").doc(`proj-${i}`)
-    batch.set(ref, proj)
-  })
-  skillGroups.forEach((sg, i) => {
-    const ref = db.collection("skillGroups").doc(`sg-${i}`)
-    batch.set(ref, sg)
-  })
-  education.forEach((edu, i) => {
-    const ref = db.collection("education").doc(`edu-${i}`)
-    batch.set(ref, edu)
-  })
+    // Procesar en batches de 500 (límite de Firestore)
+    const batchSize = 500
+    for (let i = 0; i < allDocs.length; i += batchSize) {
+      const batch = db.batch()
+      const batchDocs = allDocs.slice(i, i + batchSize)
+      
+      batchDocs.forEach(({ collection, doc, data }) => {
+        const ref = db.collection(collection).doc(doc)
+        batch.set(ref, data)
+      })
+      
+      await batch.commit()
+      console.log(`✓ Batch ${Math.floor(i / batchSize) + 1} procesado (${batchDocs.length} documentos)`)
+    }
 
-  await batch.commit()
-  console.log("✓ Firestore poblado correctamente")
+    console.log("\n✅ Firestore poblado correctamente!")
+    console.log(`   - Portfolio: 3 documentos (hero, about, contact)`)
+    console.log(`   - Experiences: ${experiences.length} documentos`)
+    console.log(`   - Projects: ${projects.length} documentos`)
+    console.log(`   - Skill Groups: ${skillGroups.length} documentos`)
+    console.log(`   - Education: ${education.length} documentos`)
+    console.log(`   Total: ${allDocs.length} documentos creados`)
+  } catch (error) {
+    console.error("❌ Error al poblar Firestore:", error)
+    throw error
+  }
 }
 
 seed().catch((err) => {

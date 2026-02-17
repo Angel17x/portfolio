@@ -4,6 +4,7 @@ import { GithubIcon, LinkedinIcon, ArrowDownIcon, FileDownIcon } from "lucide-re
 import Link from "next/link"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
+import { CVDownloadLink } from "@/components/CVDownloadLink"
 import type { HeroData } from "@/types/portfolio"
 
 interface HeroProps {
@@ -55,10 +56,10 @@ export function Hero({ hero }: HeroProps) {
               <Link href="#contacto">Contactar</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="h-12 px-6 text-base">
-              <Link href={hero.cvUrl} download target="_blank" rel="noopener noreferrer">
+              <CVDownloadLink asButton>
                 <FileDownIcon className="size-5" />
                 Descargar CV
-              </Link>
+              </CVDownloadLink>
             </Button>
             <div className="flex gap-3">
               <Button asChild variant="outline" size="icon" className="h-12 w-12">

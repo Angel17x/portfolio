@@ -1,10 +1,33 @@
-export type ProjectIcon = "bot" | "globe" | "smartphone" | "shield"
+export type ProjectIcon =
+  | "bot"
+  | "globe"
+  | "smartphone"
+  | "shield"
+  | "code"
+  | "database"
+  | "cloud"
+  | "server"
+  | "laptop"
+  | "monitor"
+  | "palette"
+  | "rocket"
+  | "zap"
+  | "lock"
+  | "key"
+  | "wifi"
+  | "cpu"
+  | "box"
+  | "package"
+  | "layers"
+  | "git-branch"
+  | "settings"
+  | "wand-2"
+  | "sparkles"
 
 export interface HeroData {
   subtitle: string
   name: string
   tagline: string
-  cvUrl: string
   githubUrl: string
   linkedinUrl: string
 }
@@ -49,7 +72,6 @@ export interface ContactData {
   description: string
   email: string
   phone: string
-  cvUrl: string
   githubUrl: string
   linkedinUrl: string
   location: string

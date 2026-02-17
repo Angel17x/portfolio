@@ -1,6 +1,32 @@
 "use client"
 
-import { BotIcon, GlobeIcon, SmartphoneIcon, ShieldIcon, type LucideIcon } from "lucide-react"
+import {
+  BotIcon,
+  GlobeIcon,
+  SmartphoneIcon,
+  ShieldIcon,
+  CodeIcon,
+  DatabaseIcon,
+  CloudIcon,
+  ServerIcon,
+  LaptopIcon,
+  MonitorIcon,
+  PaletteIcon,
+  RocketIcon,
+  ZapIcon,
+  LockIcon,
+  KeyIcon,
+  WifiIcon,
+  CpuIcon,
+  BoxIcon,
+  PackageIcon,
+  LayersIcon,
+  GitBranchIcon,
+  SettingsIcon,
+  Wand2Icon,
+  SparklesIcon,
+  type LucideIcon,
+} from "lucide-react"
 import { motion } from "motion/react"
 import { SectionHeader } from "@/components/section-header"
 import type { ProjectData, ProjectIcon } from "@/types/portfolio"
@@ -10,6 +36,26 @@ const iconMap: Record<ProjectIcon, LucideIcon> = {
   globe: GlobeIcon,
   smartphone: SmartphoneIcon,
   shield: ShieldIcon,
+  code: CodeIcon,
+  database: DatabaseIcon,
+  cloud: CloudIcon,
+  server: ServerIcon,
+  laptop: LaptopIcon,
+  monitor: MonitorIcon,
+  palette: PaletteIcon,
+  rocket: RocketIcon,
+  zap: ZapIcon,
+  lock: LockIcon,
+  key: KeyIcon,
+  wifi: WifiIcon,
+  cpu: CpuIcon,
+  box: BoxIcon,
+  package: PackageIcon,
+  layers: LayersIcon,
+  "git-branch": GitBranchIcon,
+  settings: SettingsIcon,
+  "wand-2": Wand2Icon,
+  sparkles: SparklesIcon,
 }
 
 interface ProjectsProps {
@@ -44,10 +90,7 @@ export function Projects({ projects }: ProjectsProps) {
           }}
         >
           {projects.map((project) => {
-            const iconKey = ["bot", "globe", "smartphone", "shield"].includes(project.icon)
-              ? project.icon
-              : "globe"
-            const Icon = iconMap[iconKey as ProjectIcon] ?? GlobeIcon
+            const Icon = iconMap[project.icon] ?? GlobeIcon
             return (
               <motion.article
                 key={project.title}

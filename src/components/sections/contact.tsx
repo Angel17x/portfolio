@@ -12,6 +12,7 @@ import { motion } from "motion/react"
 import { SectionHeader } from "@/components/section-header"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { CVDownloadLink } from "@/components/CVDownloadLink"
 import type { ContactData } from "@/types/portfolio"
 
 interface ContactProps {
@@ -61,15 +62,10 @@ export function Contact({ contact }: ContactProps) {
               </div>
               <div className="flex flex-wrap gap-4">
                 <Button asChild variant="default" size="lg">
-                  <Link
-                    href={contact.cvUrl}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <CVDownloadLink asButton>
                     <FileDownIcon className="size-5" />
                     Descargar CV
-                  </Link>
+                  </CVDownloadLink>
                 </Button>
                 <Button asChild variant="secondary" size="lg">
                   <Link
