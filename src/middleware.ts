@@ -12,7 +12,8 @@ export function middleware(request: NextRequest) {
     
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       // Log de intento de acceso no autorizado (en producción, usar un servicio de logging)
-      console.warn(`Intento de acceso no autorizado a ${pathname} desde ${request.ip || "unknown"}`)
+      const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
+      console.warn(`Intento de acceso no autorizado a ${pathname} desde ${ip}`)
     }
   }
 

@@ -44,6 +44,7 @@ import {
 
 interface ProjectWithId extends ProjectData {
   id: string
+  order?: number
 }
 
 const iconMap: Record<ProjectIcon, LucideIcon> = {
@@ -124,7 +125,7 @@ export function ProjectsEditor() {
           stack: proj.stack,
           description: proj.description,
           icon: proj.icon,
-          order: proj.order,
+          ...(proj.order !== undefined && { order: proj.order }),
         }),
       })
 

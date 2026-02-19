@@ -108,7 +108,7 @@ export function CVPreview({ config, open, onOpenChange, inline = false }: CVPrev
       setLoading(true)
       setError("")
 
-      let pdfDoc: React.ReactElement
+      let pdfDoc: React.ReactElement<any>
 
       switch (config.template) {
         case "harvard":
@@ -137,7 +137,7 @@ export function CVPreview({ config, open, onOpenChange, inline = false }: CVPrev
       }
 
       // Generar blob del PDF
-      const blob = await pdf(pdfDoc).toBlob()
+      const blob = await pdf(pdfDoc as any).toBlob()
       
       // Revocar URL anterior si existe
       if (pdfUrl) {

@@ -27,7 +27,7 @@ export async function generateCVPDF(
   portfolioData: PortfolioData,
   config: CVConfig
 ): Promise<Buffer> {
-  let pdfDoc: React.ReactElement
+  let pdfDoc: React.ReactElement<any>
 
   switch (config.template) {
     case "harvard":
@@ -56,5 +56,5 @@ export async function generateCVPDF(
       })
   }
 
-  return await renderToBuffer(pdfDoc)
+  return await renderToBuffer(pdfDoc as any)
 }

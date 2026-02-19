@@ -16,6 +16,7 @@ import type { EducationData } from "@/types/portfolio"
 
 interface EducationWithId extends EducationData {
   id: string
+  order?: number
 }
 
 export function EducationEditor() {
@@ -67,7 +68,7 @@ export function EducationEditor() {
           degree: edu.degree,
           institution: edu.institution,
           period: edu.period,
-          order: edu.order,
+          ...(edu.order !== undefined && { order: edu.order }),
         }),
       })
 

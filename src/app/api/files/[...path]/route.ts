@@ -39,7 +39,7 @@ export async function GET(
     const [buffer] = await file.download()
 
     // Retornar el archivo con los headers correctos
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": metadata.contentType || "application/octet-stream",
         "Content-Disposition": `inline; filename="${metadata.name?.split("/").pop() || "file"}"`,

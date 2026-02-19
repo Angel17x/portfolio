@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
           generatedAt: new Date(),
           generatedBy: user.uid,
           isLatest: false, // Se actualizará después
+          isActive: false, // Se actualizará después
         }
 
         // Marcar todos los CVs anteriores como no-latest y no-activo

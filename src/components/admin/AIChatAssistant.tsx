@@ -80,7 +80,7 @@ export function AIChatAssistant({
         const conversations = data.data || []
         
         // Agrupar por conversationId y contar mensajes
-        const grouped: Record<string, { id: string; createdAt: Date; count: number }> = {}
+        const grouped: Record<string, { id: string; createdAt: Date; messageCount: number }> = {}
         conversations.forEach((msg: any) => {
           const convId = msg.conversationId || "default"
           if (!grouped[convId]) {
@@ -88,10 +88,10 @@ export function AIChatAssistant({
             grouped[convId] = {
               id: convId,
               createdAt: msgDate,
-              count: 0,
+              messageCount: 0,
             }
           }
-          grouped[convId].count++
+          grouped[convId].messageCount++
         })
 
         setConversationsList(
@@ -534,7 +534,7 @@ export function AIChatAssistant({
                           })}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {conv.count} mensaje{conv.count !== 1 ? "s" : ""}
+                          {conv.messageCount} mensaje{conv.messageCount !== 1 ? "s" : ""}
                         </div>
                       </div>
                       <Button

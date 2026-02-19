@@ -16,6 +16,7 @@ import type { ExperienceData } from "@/types/portfolio"
 
 interface ExperienceWithId extends ExperienceData {
   id: string
+  order?: number
 }
 
 export function ExperiencesEditor() {
@@ -69,7 +70,7 @@ export function ExperiencesEditor() {
           period: exp.period,
           current: exp.current,
           description: exp.description,
-          order: exp.order,
+          ...(exp.order !== undefined && { order: exp.order }),
         }),
       })
 

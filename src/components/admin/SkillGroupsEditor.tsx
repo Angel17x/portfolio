@@ -16,6 +16,7 @@ import type { SkillGroupData } from "@/types/portfolio"
 
 interface SkillGroupWithId extends SkillGroupData {
   id: string
+  order?: number
 }
 
 export function SkillGroupsEditor() {
@@ -68,7 +69,7 @@ export function SkillGroupsEditor() {
           level: sg.level,
           accent: sg.accent,
           skills: sg.skills,
-          order: sg.order,
+          ...(sg.order !== undefined && { order: sg.order }),
         }),
       })
 

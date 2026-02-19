@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthUserFromRequest } from "@/lib/auth-server"
 import { GoogleGenAI } from "@google/genai"
 
+interface ChatMessage {
+  role: "user" | "assistant"
+  content: string
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthUserFromRequest(request)
@@ -28,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     // Si hay un mensaje del usuario, es una conversación/interacción
     if (userMessage) {
-      const history = conversationHistory || []
+      const history: ChatMessage[] = (conversationHistory || []) as ChatMessage[]
       
       // Construir el prompt con contexto
       let conversationPrompt = `Eres un asistente experto en mejorar textos para CVs profesionales. El usuario está trabajando en mejorar un texto.
@@ -41,7 +46,7 @@ ${context ? `Contexto: ${context}` : ""}
       ${currentImprovedText ? `Versión mejorada actual:\n${currentImprovedText}\n\n` : ""}
 
 Historial de la conversación:
-${history.map((msg) => `${msg.role === "user" ? "Usuario" : "Asistente"}: ${msg.content}`).join("\n\n")}
+${history.map((msg: ChatMessage) => `${msg.role === "user" ? "Usuario" : "Asistente"}: ${msg.content}`).join("\n\n")}
 
 Usuario: ${userMessage}
 
