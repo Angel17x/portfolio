@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUserFromRequest } from "@/lib/auth-server"
 import { getAdminStorage, getAdminDb } from "@/lib/firebase-admin"
-import pdf from "pdf-parse"
+import { PDFParse } from "pdf-parse"
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,38 +74,53 @@ export async function POST(request: NextRequest) {
     // Descargar el PDF
     const [fileBuffer] = await fileRef.download()
 
-    // Parsear el PDF
-    const pdfData = await pdf(fileBuffer)
-    const extractedText = pdfData.text
+    // Parsear el PDF usando la nueva API de pdf-parse v2
+    const parser = new PDFParse({ data: fileBuffer })
+    
+    try {
+      // Extraer texto del PDF
+      const textResult = await parser.getText()
+      const extractedText = textResult.text || ""
+      
+      // Obtener información del documento (metadatos y número de páginas)
+      const infoResult = await parser.getInfo({ parsePageInfo: false })
+      
+      if (!extractedText || extractedText.trim().length === 0) {
+        await parser.destroy()
+        return NextResponse.json(
+          { error: "No se pudo extraer texto del PDF. Asegúrate de que el CV sea un PDF con texto (no solo imágenes)." },
+          { status: 400 }
+        )
+      }
 
-    if (!extractedText || extractedText.trim().length === 0) {
-      return NextResponse.json(
-        { error: "No se pudo extraer texto del PDF. Asegúrate de que el CV sea un PDF con texto (no solo imágenes)." },
-        { status: 400 }
-      )
-    }
+      // Guardar el texto extraído en Firestore para referencia futura
+      const db = getAdminDb()
+      if (db) {
+        await db.collection("cvParsed").doc("latest").set({
+          cvUrl,
+          fileName,
+          extractedText,
+          parsedAt: new Date(),
+          pageCount: infoResult.total || 0,
+          metadata: infoResult.info || {},
+        })
+      }
 
-    // Guardar el texto extraído en Firestore para referencia futura
-    const db = getAdminDb()
-    if (db) {
-      await db.collection("cvParsed").doc("latest").set({
-        cvUrl,
-        fileName,
-        extractedText,
-        parsedAt: new Date(),
-        pageCount: pdfData.numpages,
-        metadata: pdfData.info || {},
+      await parser.destroy()
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          text: extractedText,
+          pageCount: infoResult.total || 0,
+          metadata: infoResult.info || {},
+        },
       })
+    } catch (parseError) {
+      // Asegurarse de destruir el parser incluso si hay error
+      await parser.destroy().catch(() => {})
+      throw parseError
     }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        text: extractedText,
-        pageCount: pdfData.numpages,
-        metadata: pdfData.info || {},
-      },
-    })
   } catch (error) {
     console.error("Error parseando CV:", error)
     return NextResponse.json(

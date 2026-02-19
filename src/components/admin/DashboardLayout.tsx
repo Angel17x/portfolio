@@ -6,7 +6,7 @@ import Link from "next/link"
 import { AIChatAssistant } from "./AIChatAssistant"
 import { Button } from "@/components/ui/button"
 import { logout } from "@/lib/auth"
-import {
+import { 
   FileText,
   Briefcase,
   Rocket,
