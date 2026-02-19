@@ -21,7 +21,10 @@ export const CVColorSchema = z.object({
 export const CVFontSchema = z.object({
   heading: z.string().default("Times New Roman"),
   body: z.string().default("Times New Roman"),
-  size: z.number().min(8).max(14).default(11),
+  titleSize: z.number().min(8).max(72).default(28), // Título principal (nombre)
+  sectionTitleSize: z.number().min(8).max(72).default(12), // Títulos de sección
+  subtitleSize: z.number().min(8).max(72).default(11), // Subtítulos (empresas, instituciones)
+  bodySize: z.number().min(8).max(72).default(10), // Texto del cuerpo
 })
 
 export const CVConfigSchema = z.object({
@@ -34,7 +37,10 @@ export const CVConfigSchema = z.object({
   fonts: CVFontSchema.default({
     heading: "Times New Roman",
     body: "Times New Roman",
-    size: 11,
+    titleSize: 28,
+    sectionTitleSize: 12,
+    subtitleSize: 11,
+    bodySize: 10,
   }),
   sectionVisibility: CVSectionVisibilitySchema.default({
     hero: true,

@@ -152,7 +152,7 @@ ${portfolioData.about.paragraphs.join("\n\n")}
 
 EXPERIENCIAS LABORALES:
 ${portfolioData.experiences.map((exp, idx) => `
-${idx + 1}. ${exp.title} en ${exp.company}
+${idx + 1}. ${exp.title} en ${exp.company} [Índice: ${idx}]
    Período: ${exp.period} ${exp.current ? "(Actual)" : ""}
    Descripción: ${exp.description}
 `).join("\n")}

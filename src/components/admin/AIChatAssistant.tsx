@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ConfirmDialog } from "./ConfirmDialog"
+import { DataChangeConfirmation, ProposedChange } from "./DataChangeConfirmation"
 import { getIdToken } from "@/lib/auth"
 import { MessageSquare, Send, Loader2, Sparkles, X, Trash2, History, List, ThumbsUp, Copy, Check } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
@@ -27,6 +28,7 @@ interface Message {
     education?: string
     cv?: string
   }
+  proposedChanges?: ProposedChange[]
 }
 
 export function AIChatAssistant({
@@ -51,6 +53,11 @@ export function AIChatAssistant({
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
   const [showDeleteConvConfirm, setShowDeleteConvConfirm] = useState(false)
   const [convToDelete, setConvToDelete] = useState<{ id: string; createdAt: Date } | null>(null)
+  
+  // Estados para confirmación de cambios de datos
+  const [showDataChangeConfirm, setShowDataChangeConfirm] = useState(false)
+  const [proposedChanges, setProposedChanges] = useState<ProposedChange[]>([])
+  const [applyingChanges, setApplyingChanges] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -158,9 +165,14 @@ export function AIChatAssistant({
 
           // Cargar la conversación más reciente
           if (latestConvId && messagesByConv[latestConvId] && messagesByConv[latestConvId].length > 0) {
-            // Ordenar mensajes por timestamp (más antiguo primero)
-            const sortedMessages = messagesByConv[latestConvId].sort(
-              (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+            // Ordenar mensajes por timestamp (más antiguo primero, más nuevo al final)
+            // IMPORTANTE: Asegurar orden ascendente (más antiguo = menor timestamp)
+            const sortedMessages = [...messagesByConv[latestConvId]].sort(
+              (a, b) => {
+                const timeA = a.timestamp.getTime()
+                const timeB = b.timestamp.getTime()
+                return timeA - timeB // Ascendente: más antiguo primero
+              }
             )
             setMessages(sortedMessages)
             setConversationId(latestConvId)
@@ -230,9 +242,18 @@ export function AIChatAssistant({
     setError("")
   }
 
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    // Scroll automático al final cuando hay nuevos mensajes (más nuevo abajo)
+    // Esperar un poco más para asegurar que el DOM se haya actualizado
+    const timer = setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+      }
+    }, 150)
+    
+    return () => clearTimeout(timer)
+  }, [messages.length, messages])
 
   const handleSend = async () => {
     if (!input.trim() || loading) return
@@ -242,13 +263,19 @@ export function AIChatAssistant({
     setLoading(true)
     setError("")
 
-    // Agregar mensaje del usuario
+    // Agregar mensaje del usuario (siempre al final)
+    const now = new Date()
     const userMsg: Message = {
       role: "user",
       content: userMessage,
-      timestamp: new Date(),
+      timestamp: now,
     }
-    setMessages((prev) => [...prev, userMsg])
+    // Agregar al final y asegurar orden cronológico
+    setMessages((prev) => {
+      const updated = [...prev, userMsg]
+      // Ordenar por timestamp (más antiguo primero, más nuevo al final)
+      return updated.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+    })
 
     try {
       const token = await getIdToken()
@@ -279,26 +306,71 @@ export function AIChatAssistant({
         setConversationId(data.conversationId)
       }
       
-      // Agregar respuesta del asistente
+      // Extraer cambios propuestos del JSON en la respuesta
+      let proposedChanges: ProposedChange[] = []
+      try {
+        // Buscar bloque JSON con diferentes formatos posibles
+        const jsonMatch1 = data.reply.match(/```json\s*([\s\S]*?)\s*```/)
+        const jsonMatch2 = data.reply.match(/```\s*([\s\S]*?)\s*```/)
+        const jsonMatch3 = data.reply.match(/\{[\s\S]*"proposedChanges"[\s\S]*\}/)
+        
+        let jsonString = null
+        if (jsonMatch1) jsonString = jsonMatch1[1]
+        else if (jsonMatch2) jsonString = jsonMatch2[1]
+        else if (jsonMatch3) jsonString = jsonMatch3[0]
+        
+        if (jsonString) {
+          const jsonData = JSON.parse(jsonString)
+          if (jsonData.proposedChanges && Array.isArray(jsonData.proposedChanges)) {
+            proposedChanges = jsonData.proposedChanges.filter((change: any) => 
+              change.section && change.newValue
+            )
+            // Remover el bloque JSON del contenido para que no se muestre al usuario
+            data.reply = data.reply.replace(/```json\s*[\s\S]*?\s*```/g, "").trim()
+            data.reply = data.reply.replace(/```\s*\{[\s\S]*"proposedChanges"[\s\S]*\}\s*```/g, "").trim()
+            data.reply = data.reply.replace(/\{[\s\S]*"proposedChanges"[\s\S]*\}/g, "").trim()
+          }
+        }
+      } catch (error) {
+        console.error("Error parseando cambios propuestos:", error)
+        // No mostrar error al usuario, simplemente no aplicar cambios
+      }
+      
+      // Agregar respuesta del asistente (siempre al final)
+      const now = new Date()
       const assistantMsg: Message = {
         role: "assistant",
         content: data.reply,
-        timestamp: new Date(),
+        timestamp: now,
         improvedText: data.improvedText,
         suggestions: data.suggestions,
+        proposedChanges: proposedChanges.length > 0 ? proposedChanges : undefined,
       }
-      setMessages((prev) => [...prev, assistantMsg])
+      // Agregar al final y asegurar orden cronológico
+      setMessages((prev) => {
+        const updated = [...prev, assistantMsg]
+        // Ordenar por timestamp (más antiguo primero, más nuevo al final)
+        return updated.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      })
       setConversationHistory(data.conversationHistory || [])
+      
+      // Si hay cambios propuestos, mostrar diálogo de confirmación
+      if (proposedChanges.length > 0) {
+        setProposedChanges(proposedChanges)
+        setShowDataChangeConfirm(true)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al procesar el mensaje")
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `Lo siento, hubo un error: ${err instanceof Error ? err.message : "Error desconocido"}`,
-          timestamp: new Date(),
-        },
-      ])
+      const errorMsg: Message = {
+        role: "assistant",
+        content: `Lo siento, hubo un error: ${err instanceof Error ? err.message : "Error desconocido"}`,
+        timestamp: new Date(),
+      }
+      // Agregar al final y asegurar orden cronológico
+      setMessages((prev) => {
+        const updated = [...prev, errorMsg]
+        return updated.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      })
     } finally {
       setLoading(false)
     }
@@ -497,9 +569,12 @@ export function AIChatAssistant({
               </motion.div>
             )}
             <AnimatePresence>
-              {messages.map((msg, idx) => (
+              {messages
+                .slice()
+                .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+                .map((msg, idx) => (
                 <motion.div
-                  key={idx}
+                  key={`${msg.timestamp.getTime()}-${idx}-${msg.role}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -717,6 +792,66 @@ export function AIChatAssistant({
         confirmText="Eliminar"
         cancelText="Cancelar"
         variant="destructive"
+      />
+
+      {/* Diálogo de confirmación de cambios de datos */}
+      <DataChangeConfirmation
+        open={showDataChangeConfirm}
+        onOpenChange={setShowDataChangeConfirm}
+        changes={proposedChanges}
+        loading={applyingChanges}
+        onConfirm={async () => {
+          setApplyingChanges(true)
+          try {
+            const token = await getIdToken()
+            if (!token) throw new Error("No autenticado")
+
+            const response = await fetch("/api/admin/portfolio/apply-changes", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ changes: proposedChanges }),
+            })
+
+            if (!response.ok) {
+              const errorData = await response.json()
+              throw new Error(errorData.error || "Error al aplicar cambios")
+            }
+
+            const data = await response.json()
+            
+            // Mostrar mensaje de éxito (al final)
+            const successMsg: Message = {
+              role: "assistant",
+              content: "✅ **Cambios aplicados correctamente**\n\nLos cambios han sido guardados en tu portafolio. Puedes verificar los cambios en la sección correspondiente.",
+              timestamp: new Date(),
+            }
+            // Agregar al final y asegurar orden cronológico
+            setMessages((prev) => {
+              const updated = [...prev, successMsg]
+              return updated.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+            })
+
+            setShowDataChangeConfirm(false)
+            setProposedChanges([])
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Error al aplicar cambios")
+            const errorMsg: Message = {
+              role: "assistant",
+              content: `❌ **Error al aplicar cambios**\n\n${err instanceof Error ? err.message : "Error desconocido"}`,
+              timestamp: new Date(),
+            }
+            // Agregar al final y asegurar orden cronológico
+            setMessages((prev) => {
+              const updated = [...prev, errorMsg]
+              return updated.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+            })
+          } finally {
+            setApplyingChanges(false)
+          }
+        }}
       />
     </Dialog>
   )

@@ -89,12 +89,26 @@ export function CVHistory() {
   }
 
   const downloadCV = (url: string, fileName: string) => {
-    const link = document.createElement("a")
-    link.href = url
-    link.download = fileName.split("/").pop() || "cv.pdf"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    try {
+      const link = document.createElement("a")
+      link.href = url
+      link.download = fileName.split("/").pop() || "cv.pdf"
+      link.style.display = "none"
+      document.body.appendChild(link)
+      link.click()
+      // Usar setTimeout para asegurar que el click se complete antes de eliminar
+      setTimeout(() => {
+        try {
+          if (link && link.parentNode === document.body && document.body.contains(link)) {
+            document.body.removeChild(link)
+          }
+        } catch (e) {
+          console.warn("Error al eliminar link de descarga:", e)
+        }
+      }, 200)
+    } catch (e) {
+      console.error("Error al descargar CV:", e)
+    }
   }
 
   const formatDate = (dateString: string) => {

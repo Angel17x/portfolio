@@ -45,6 +45,8 @@ const fontMap: Record<string, string> = {
 const styles = StyleSheet.create({
   page: {
     padding: 40,
+    paddingTop: 30, // Margen superior más generoso
+    paddingBottom: 30, // Margen inferior más generoso
     fontSize: 11,
     fontFamily: "Times-Roman",
     lineHeight: 1.6,
@@ -81,7 +83,8 @@ const styles = StyleSheet.create({
     color: "#555",
   },
   section: {
-    marginBottom: 18,
+    marginBottom: 24, // Más espacio entre secciones
+    marginTop: 8, // Espacio superior
   },
   sectionTitle: {
     fontSize: 15,
@@ -200,6 +203,21 @@ export function HarvardCVTemplate({
   const { hero, about, experiences, projects, skillGroups, education, contact } =
     portfolioData
 
+  // Función para limpiar markdown del texto (remover **, ##, etc.)
+  const cleanMarkdown = (text: string): string => {
+    if (!text) return ""
+    return text
+      .replace(/\*\*(.*?)\*\*/g, "$1") // Remover **texto** y dejar solo el texto
+      .replace(/\*(?![*\s])(.*?)(?<!\*)\*/g, "$1") // Remover *texto* (pero no **) y dejar solo el texto
+      .replace(/##+\s*/g, "") // Remover ##, ###, ####, etc.
+      .replace(/`(.*?)`/g, "$1") // Remover `código` y dejar solo el código
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1") // Remover [texto](url) y dejar solo el texto
+      .replace(/~~(.*?)~~/g, "$1") // Remover ~~texto~~ y dejar solo el texto
+      .replace(/^\s*[-•*]\s+/gm, "") // Remover viñetas markdown al inicio de línea
+      .replace(/\n{3,}/g, "\n\n") // Limpiar múltiples saltos de línea
+      .trim()
+  }
+
   // Mapear fuentes a las fuentes por defecto de react-pdf
   const bodyFont = fontMap[config.fonts.body] || "Times-Roman"
   const headingFont = fontMap[config.fonts.heading] || "Times-Roman"
@@ -220,33 +238,44 @@ export function HarvardCVTemplate({
   const accentColor = hexToRgb(config.colors.accent)
   const secondaryColor = hexToRgb(config.colors.secondary)
 
+  const titleSize = config.fonts.titleSize || 26
+  const sectionTitleSize = config.fonts.sectionTitleSize || 15
+  const subtitleSize = config.fonts.subtitleSize || 12
+  const bodySize = config.fonts.bodySize || 11
+
   const dynamicStyles = StyleSheet.create({
     page: {
       ...styles.page,
       fontFamily: bodyFont,
-      fontSize: config.fonts.size,
+      fontSize: bodySize,
     },
     header: {
       ...styles.header,
       borderBottomColor: config.colors.primary,
+      marginBottom: 28, // Más espacio después del header
     },
     name: {
       ...styles.name,
+      fontSize: titleSize,
       color: config.colors.primary,
       fontFamily: headingFont,
     },
     sectionTitle: {
       ...styles.sectionTitle,
+      fontSize: sectionTitleSize,
       color: config.colors.primary,
       borderBottomColor: config.colors.primary,
       fontFamily: headingFont,
+      marginBottom: 14, // Más espacio después del título de sección
     },
     experienceTitle: {
       ...styles.experienceTitle,
+      fontSize: subtitleSize,
       color: config.colors.primary,
     },
     projectTitle: {
       ...styles.projectTitle,
+      fontSize: subtitleSize,
       color: config.colors.primary,
     },
     currentBadge: {
@@ -295,7 +324,7 @@ export function HarvardCVTemplate({
             </Text>
             {about.paragraphs.map((paragraph, idx) => (
               <Text key={idx} style={styles.aboutText}>
-                {paragraph}
+                {cleanMarkdown(paragraph)}
               </Text>
             ))}
           </View>
@@ -322,7 +351,7 @@ export function HarvardCVTemplate({
                   </View>
                   {exp.description && (
                     <Text style={styles.experienceDescription}>
-                      {exp.description}
+                      {cleanMarkdown(exp.description)}
                     </Text>
                   )}
                 </View>
@@ -364,7 +393,7 @@ export function HarvardCVTemplate({
                 )}
                 {project.description && (
                   <Text style={styles.projectDescription}>
-                    {project.description}
+                    {cleanMarkdown(project.description)}
                   </Text>
                 )}
               </View>

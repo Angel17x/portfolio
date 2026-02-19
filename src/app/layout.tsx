@@ -92,6 +92,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body
         className={`${outfit.variable} ${jetbrainsMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"

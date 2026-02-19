@@ -48,6 +48,8 @@ const baseStyles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     padding: 0,
     margin: 0,
+    paddingTop: 20, // Margen superior para todas las páginas
+    paddingBottom: 20, // Margen inferior para todas las páginas
   },
   // Columna izquierda (~65% según diseño)
   leftColumn: {
@@ -104,7 +106,8 @@ const baseStyles = StyleSheet.create({
   },
   // Secciones de la columna izquierda
   leftSection: {
-    marginBottom: 24,
+    marginBottom: 28, // Más espacio entre secciones para evitar que se vea pegado
+    marginTop: 8, // Espacio superior para separar de la sección anterior
   },
   sectionTitle: {
     fontSize: 12,
@@ -151,7 +154,8 @@ const baseStyles = StyleSheet.create({
   },
   // Secciones de la columna derecha
   rightSection: {
-    marginBottom: 22,
+    marginBottom: 26, // Más espacio entre secciones
+    marginTop: 8, // Espacio superior
   },
   rightSectionTitle: {
     fontSize: 12,
@@ -219,12 +223,15 @@ export function ModernCVTemplate({
   const { hero, about, experiences, projects, skillGroups, education, contact } =
     portfolioData
 
-  // Mapear fuentes
-  // Columna izquierda: Sans-serif (Helvetica)
-  // Columna derecha: Serif (Times-Roman)
-  const leftColumnFont = "Helvetica" // Sans-serif para izquierda
-  const rightColumnFont = "Times-Roman" // Serif para derecha
+  // Mapear fuentes según la configuración del usuario
+  // Usar la fuente de body para todo el texto del cuerpo
+  // Usar la fuente de heading para títulos
+  const bodyFont = fontMap[config.fonts.body] || "Helvetica"
   const headingFont = fontMap[config.fonts.heading] || "Helvetica"
+  
+  // Para el CV moderno, usar la misma fuente en ambas columnas para consistencia
+  const leftColumnFont = bodyFont // Fuente del cuerpo para columna izquierda
+  const rightColumnFont = bodyFont // Misma fuente para columna derecha (consistencia)
 
   // Función para convertir color hex a RGB
   const hexToRgb = (hex: string) => {
@@ -242,6 +249,11 @@ export function ModernCVTemplate({
   const accentColor = hexToRgb(config.colors.accent)
   const secondaryColor = hexToRgb(config.colors.secondary)
 
+  const titleSize = config.fonts.titleSize || 28
+  const sectionTitleSize = config.fonts.sectionTitleSize || 12
+  const subtitleSize = config.fonts.subtitleSize || 11
+  const bodySize = config.fonts.bodySize || 10
+
   // Crear estilos dinámicos con los colores de la configuración
   const dynamicStyles = StyleSheet.create({
     page: {
@@ -251,35 +263,42 @@ export function ModernCVTemplate({
     leftColumn: {
       ...baseStyles.leftColumn,
       fontFamily: leftColumnFont,
-      fontSize: 10,
+      fontSize: bodySize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
     },
-    // Columna derecha con fuente serif
+    // Columna derecha con la misma fuente que la izquierda
     rightColumn: {
       ...baseStyles.rightColumn,
       backgroundColor: `rgb(${secondaryColor.r}, ${secondaryColor.g}, ${secondaryColor.b})`,
-      fontFamily: rightColumnFont,
-      fontSize: 10,
+      fontFamily: leftColumnFont, // Misma fuente que la columna izquierda
+      fontSize: bodySize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
     },
     headerBox: {
       ...baseStyles.headerBox,
       backgroundColor: `rgb(${secondaryColor.r}, ${secondaryColor.g}, ${secondaryColor.b})`,
+      marginBottom: 25, // Más espacio antes de la primera sección
     },
     name: {
       ...baseStyles.name,
+      fontSize: titleSize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       fontFamily: leftColumnFont,
+      fontWeight: "bold", // Asegurar peso bold explícitamente
     },
     subtitle: {
       ...baseStyles.subtitle,
+      fontSize: subtitleSize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       fontFamily: leftColumnFont,
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     contactItem: {
       ...baseStyles.contactItem,
+      fontSize: bodySize * 0.95,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       fontFamily: leftColumnFont,
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     contactIcon: {
       ...baseStyles.contactIcon,
@@ -287,72 +306,116 @@ export function ModernCVTemplate({
     },
     sectionTitle: {
       ...baseStyles.sectionTitle,
+      fontSize: sectionTitleSize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       borderBottom: `2px solid rgb(${accentColor.r}, ${accentColor.g}, ${accentColor.b})`,
       fontFamily: leftColumnFont,
+      fontWeight: "bold", // Asegurar peso bold explícitamente
+      marginBottom: 14, // Más espacio después del título de sección
     },
     experienceCompanyRole: {
       ...baseStyles.experienceCompanyRole,
+      fontSize: subtitleSize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       fontFamily: leftColumnFont,
+      fontWeight: "bold", // Asegurar peso bold explícitamente
     },
     experiencePeriod: {
       ...baseStyles.experiencePeriod,
+      fontSize: bodySize * 0.9, // Ligeramente más pequeño que el cuerpo
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       fontFamily: leftColumnFont,
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     experienceBullet: {
       ...baseStyles.experienceBullet,
+      fontSize: bodySize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       fontFamily: leftColumnFont,
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     linkItem: {
       ...baseStyles.linkItem,
+      fontSize: bodySize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       fontFamily: leftColumnFont,
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     rightSectionTitle: {
       ...baseStyles.rightSectionTitle,
+      fontSize: sectionTitleSize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
-      fontFamily: rightColumnFont,
+      fontFamily: leftColumnFont, // Misma fuente que el resto
+      fontWeight: "bold", // Asegurar peso bold explícitamente
+      marginBottom: 14,
     },
     rightSectionTitleUnderlined: {
       ...baseStyles.rightSectionTitleUnderlined,
+      fontSize: sectionTitleSize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
       borderBottom: `2px solid rgb(${accentColor.r}, ${accentColor.g}, ${accentColor.b})`,
-      fontFamily: rightColumnFont,
+      fontFamily: leftColumnFont, // Misma fuente que el resto
+      fontWeight: "bold", // Asegurar peso bold explícitamente
+      marginBottom: 14,
     },
     summaryText: {
       ...baseStyles.summaryText,
+      fontSize: bodySize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
-      fontFamily: rightColumnFont,
+      fontFamily: leftColumnFont, // Misma fuente que el resto
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     educationInstitution: {
       ...baseStyles.educationInstitution,
+      fontSize: subtitleSize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
-      fontFamily: rightColumnFont,
+      fontFamily: leftColumnFont, // Misma fuente que el resto
+      fontWeight: "bold", // Asegurar peso bold explícitamente
     },
     educationDate: {
       ...baseStyles.educationDate,
+      fontSize: bodySize * 0.9,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
-      fontFamily: rightColumnFont,
+      fontFamily: leftColumnFont, // Misma fuente que el resto
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     educationDegree: {
       ...baseStyles.educationDegree,
+      fontSize: bodySize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
-      fontFamily: rightColumnFont,
+      fontFamily: leftColumnFont, // Misma fuente que el resto
+      fontStyle: "italic", // Asegurar estilo italic explícitamente
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     skillItem: {
       ...baseStyles.skillItem,
+      fontSize: bodySize,
       color: `rgb(${primaryColor.r}, ${primaryColor.g}, ${primaryColor.b})`,
-      fontFamily: rightColumnFont,
+      fontFamily: leftColumnFont, // Misma fuente que el resto
+      fontWeight: "normal", // Asegurar peso normal explícitamente
     },
     currentBadge: {
       ...baseStyles.currentBadge,
+      fontSize: bodySize * 0.9,
       color: `rgb(${accentColor.r}, ${accentColor.g}, ${accentColor.b})`,
       fontFamily: leftColumnFont,
     },
   })
+
+  // Función para limpiar markdown del texto (remover **, ##, etc.)
+  const cleanMarkdown = (text: string): string => {
+    if (!text) return ""
+    return text
+      .replace(/\*\*(.*?)\*\*/g, "$1") // Remover **texto** y dejar solo el texto
+      .replace(/\*(?![*\s])(.*?)(?<!\*)\*/g, "$1") // Remover *texto* (pero no **) y dejar solo el texto
+      .replace(/##+\s*/g, "") // Remover ##, ###, ####, etc.
+      .replace(/`(.*?)`/g, "$1") // Remover `código` y dejar solo el código
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1") // Remover [texto](url) y dejar solo el texto
+      .replace(/~~(.*?)~~/g, "$1") // Remover ~~texto~~ y dejar solo el texto
+      .replace(/^\s*[-•*]\s+/gm, "") // Remover viñetas markdown al inicio de línea
+      .replace(/\n{3,}/g, "\n\n") // Limpiar múltiples saltos de línea
+      .trim()
+  }
 
   // Combinar todas las habilidades en una sola lista
   const allSkills: string[] = []
@@ -402,32 +465,42 @@ export function ModernCVTemplate({
         {/* Columna izquierda (más ancha, sans-serif) */}
         <View style={dynamicStyles.leftColumn}>
           {/* Header con nombre, título y contacto */}
-          <View style={dynamicStyles.headerBox}>
-            <Text style={dynamicStyles.name}>{hero.name.toUpperCase()}</Text>
-            {hero.subtitle && (
-              <Text style={dynamicStyles.subtitle}>{hero.subtitle.toUpperCase()}</Text>
-            )}
-            <View style={baseStyles.contactInfo}>
-              {contact.email && (
-                <View style={dynamicStyles.contactItem}>
-                  <View style={dynamicStyles.contactIcon} />
-                  <Text>{contact.email}</Text>
-                </View>
+          {config.sectionVisibility.hero && (
+            <View style={dynamicStyles.headerBox}>
+              <Text style={dynamicStyles.name}>{hero.name.toUpperCase()}</Text>
+              {hero.subtitle && (
+                <Text style={dynamicStyles.subtitle}>{hero.subtitle.toUpperCase()}</Text>
               )}
-              {contact.phone && (
-                <View style={dynamicStyles.contactItem}>
-                  <View style={dynamicStyles.contactIcon} />
-                  <Text>{contact.phone}</Text>
-                </View>
-              )}
-              {contact.location && (
-                <View style={dynamicStyles.contactItem}>
-                  <View style={dynamicStyles.contactIcon} />
-                  <Text>{contact.location}</Text>
+              {config.sectionVisibility.contact && (
+                <View style={baseStyles.contactInfo}>
+                  {contact.email && (
+                    <View style={dynamicStyles.contactItem}>
+                      <View style={dynamicStyles.contactIcon} />
+                      <Text style={{ fontFamily: leftColumnFont, fontSize: bodySize * 0.95 }}>
+                        {contact.email}
+                      </Text>
+                    </View>
+                  )}
+                  {contact.phone && (
+                    <View style={dynamicStyles.contactItem}>
+                      <View style={dynamicStyles.contactIcon} />
+                      <Text style={{ fontFamily: leftColumnFont, fontSize: bodySize * 0.95 }}>
+                        {contact.phone}
+                      </Text>
+                    </View>
+                  )}
+                  {contact.location && (
+                    <View style={dynamicStyles.contactItem}>
+                      <View style={dynamicStyles.contactIcon} />
+                      <Text style={{ fontFamily: leftColumnFont, fontSize: bodySize * 0.95 }}>
+                        {contact.location}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
             </View>
-          </View>
+          )}
 
           {/* Experiencia */}
           {config.sectionVisibility.experiences && experiences.length > 0 && (
@@ -448,7 +521,40 @@ export function ModernCVTemplate({
                   </View>
                   {exp.description && (
                     <View>
-                      {exp.description
+                      {cleanMarkdown(exp.description)
+                        .split("\n")
+                        .filter((line) => line.trim())
+                        .map((line, lineIdx) => (
+                          <Text key={lineIdx} style={dynamicStyles.experienceBullet}>
+                            • {line.trim()}
+                          </Text>
+                        ))}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Proyectos */}
+          {config.sectionVisibility.projects && projects.length > 0 && (
+            <View style={baseStyles.leftSection}>
+              <Text style={dynamicStyles.sectionTitle}>Proyectos</Text>
+              {projects.map((proj, idx) => (
+                <View key={idx} style={baseStyles.experienceItem}>
+                  <View style={baseStyles.experienceHeader}>
+                    <Text style={dynamicStyles.experienceCompanyRole}>
+                      {proj.title}
+                    </Text>
+                    {proj.stack && proj.stack.length > 0 && (
+                      <Text style={dynamicStyles.experiencePeriod}>
+                        {proj.stack.join(", ")}
+                      </Text>
+                    )}
+                  </View>
+                  {proj.description && (
+                    <View>
+                      {cleanMarkdown(proj.description)
                         .split("\n")
                         .filter((line) => line.trim())
                         .map((line, lineIdx) => (
@@ -464,7 +570,8 @@ export function ModernCVTemplate({
           )}
 
           {/* Sitio Web, Portafolio y Perfiles */}
-          {(contact.linkedinUrl || contact.githubUrl || hero.githubUrl || hero.linkedinUrl) && (
+          {config.sectionVisibility.contact && 
+           (contact.linkedinUrl || contact.githubUrl || hero.githubUrl || hero.linkedinUrl) && (
             <View style={baseStyles.leftSection}>
               <Text style={dynamicStyles.sectionTitle}>
                 Sitio Web, Portafolio y Perfiles
@@ -501,7 +608,7 @@ export function ModernCVTemplate({
               <Text style={dynamicStyles.rightSectionTitle}>Resumen Profesional</Text>
               {about.paragraphs.map((paragraph, idx) => (
                 <Text key={idx} style={dynamicStyles.summaryText}>
-                  {paragraph}
+                  {cleanMarkdown(paragraph)}
                 </Text>
               ))}
             </View>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { FormField } from "./FormField"
 import { FileUpload } from "./FileUpload"
 import { getIdToken } from "@/lib/auth"
+import { getAdminPortfolioEditorData } from "@/app/admin/actions"
 import type { HeroData, AboutData, ContactData } from "@/types/portfolio"
 
 export function PortfolioEditor() {
@@ -17,121 +18,30 @@ export function PortfolioEditor() {
   const [success, setSuccess] = useState("")
 
   useEffect(() => {
-    loadData()
-  }, [])
-
-  const loadData = async () => {
-    try {
-      const token = await getIdToken()
-      if (!token) throw new Error("No autenticado")
-
-      const [heroRes, aboutRes, contactRes] = await Promise.all([
-        fetch("/api/admin/portfolio/hero", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/admin/portfolio/about", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/admin/portfolio/contact", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ])
-
-      // Hero
-      if (heroRes.ok) {
-        const heroData = await heroRes.json()
-        console.log("Hero data cargado desde Firebase:", heroData.data)
-        if (heroData.data) {
-          setHero(heroData.data)
-        } else {
-          // Si existe pero está vacío, inicializar con valores vacíos
-          setHero({
-            subtitle: "",
-            name: "",
-            tagline: "",
-            githubUrl: "",
-            linkedinUrl: "",
-          })
+    let cancelled = false
+    async function load() {
+      try {
+        const token = await getIdToken()
+        if (!token) throw new Error("No autenticado")
+        if (cancelled) return
+        const data = await getAdminPortfolioEditorData(token)
+        if (cancelled) return
+        setHero(data.hero)
+        setAbout(data.about)
+        setContact(data.contact)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Error al cargar datos")
         }
-      } else if (heroRes.status === 404) {
-        console.log("Hero documento no existe en Firebase, inicializando vacío")
-        // Si no existe, inicializar con valores vacíos
-          setHero({
-            subtitle: "",
-            name: "",
-            tagline: "",
-            githubUrl: "",
-            linkedinUrl: "",
-          })
-      } else {
-        const errorData = await heroRes.json().catch(() => ({}))
-        console.error("Error cargando hero:", errorData)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-
-      // About
-      if (aboutRes.ok) {
-        const aboutData = await aboutRes.json()
-        if (aboutData.data) {
-          setAbout(aboutData.data)
-        } else {
-          setAbout({
-            title: "",
-            subtitle: "",
-            paragraphs: [""],
-            languages: [],
-          })
-        }
-      } else if (aboutRes.status === 404) {
-        setAbout({
-          title: "",
-          subtitle: "",
-          paragraphs: [""],
-          languages: [],
-        })
-      } else {
-        const errorData = await aboutRes.json().catch(() => ({}))
-        console.error("Error cargando about:", errorData)
-      }
-
-      // Contact
-      if (contactRes.ok) {
-        const contactData = await contactRes.json()
-        console.log("Contact data cargado desde Firebase:", contactData.data)
-        if (contactData.data) {
-          setContact(contactData.data)
-        } else {
-          setContact({
-            title: "",
-            description: "",
-            email: "",
-            phone: "",
-            githubUrl: "",
-            linkedinUrl: "",
-            location: "",
-          })
-        }
-      } else if (contactRes.status === 404) {
-        console.log("Contact documento no existe en Firebase, inicializando vacío")
-        setContact({
-          title: "",
-          description: "",
-          email: "",
-          phone: "",
-          githubUrl: "",
-          linkedinUrl: "",
-          location: "",
-        })
-      } else {
-        const errorData = await contactRes.json().catch(() => ({}))
-        console.error("Error cargando contact:", errorData)
-      }
-    } catch (err) {
-      console.error("Error en loadData:", err)
-      setError(err instanceof Error ? err.message : "Error al cargar datos")
-    } finally {
-      setLoading(false)
     }
-  }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const saveData = async (docId: string, data: unknown) => {
     setSaving(docId)
